@@ -20,6 +20,17 @@ def framadoc_read_config_files():
   
   return [i_dir, s_dir]
 
+def framadoc_get_predicate_files():
+  predicate_list=[]
+  pre_list = framadoc_read_config_files()[0]
+  
+  for predicate in pre_list:
+    predicate_list = predicate_list + glob.glob(predicate + "/*_fc.h")
+
+  for i in range(len(predicate_list)):
+    predicate_list[i] = predicate_list[i].replace("\\","/")
+    
+  return predicate_list
 
 def framadoc_get_source_files():
   source_list = []
