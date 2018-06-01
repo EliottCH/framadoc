@@ -1,6 +1,12 @@
 import os
 import glob # needed for listing sources files
 
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument("-a", "--all", help="generates all documentation", action="store_true")
+parser.add_argument("-vb", "--verbose", help="Augment the verbosity", action="store_true")
+args = parser.parse_args()
+
 NUMBER_OF_LINES_FOR_CONTRACT_CHECKED = 5
 
 def clean_string(to_clean):
@@ -94,6 +100,7 @@ def framadoc_check_if_there_is_contract(func_signature_line, content):
     
 
 def framadoc_get_function_contract(source_path, func_name):
+  global args
   f = open(source_path, "r")
   content = f.read()
   f.close()
@@ -107,13 +114,19 @@ def framadoc_get_function_contract(source_path, func_name):
     clean = clean.replace("\t","")
     if clean == "{":
       if func_name in content[i-1]:
+        if args.verbose:
+          print("Checking if function '{}' has a contract ...".format(func_name))
         contract_end_line = framadoc_check_if_there_is_contract(i-1,content)
         if contract_end_line > 0:
           for k in range(contract_end_line-1):
             if "/*@" in content[contract_end_line-k-1]:
               contract_begin_line = contract_end_line-k-1
+              if args.verbose:
+                print("true : from line {} to line {}".format(contract_begin_line, contract_end_line))
               return content[contract_begin_line:contract_end_line]
         else:
+          if args.verbose:
+            print("No contract found for function '{}'".format(func_name))
           return "no_contract"
 
 def framadoc_get_path_of_module(module_name):
@@ -122,11 +135,15 @@ def framadoc_get_path_of_module(module_name):
     splited = path.split("/")
     if module_name in splited[-1]:
       return path
+  print("framadoc_get_path_of_module : No path found for module {}", module_name)
   return "no_path"
 
 def framadoc_generate_html_files():
+  global args
+  
   mod_dic = framadoc_get_modules_dictionary()
-
+  if args.verbose:
+    print("generating index.html ...")
   index_path = "index.html"
   f = open(index_path,"w+")
   f.write("<h1>Framadoc</h1>\n")
@@ -139,6 +156,8 @@ def framadoc_generate_html_files():
   
   for module_name, func_lst in mod_dic.items():
     new_html_path = "modules/{}.html".format(module_name)
+    if args.verbose:
+      print("\nCreating {}.html\n".format(module_name))
     f = open(new_html_path,"w+")
     f.write("<h1>Liste des fonctions du module '{}'</h1>\n".format(module_name))
     f.write("<ul>\n")
@@ -152,9 +171,20 @@ def framadoc_generate_html_files():
             f.write("{}<br/>\n".format(line))
     f.write("</ul>\n")
     f.write("\n<br/><a href = '../index.html'>retour</a>\n")
+    if args.verbose:
+      print("{}.html created successfully.".format(module_name))
     f.close()
 
-def framadoc_generate_all():
-  framadoc_generate_html_files()
+def framadoc_generate():
+  print("")
+  global args
+  if args.all:
+    print("generating the whole documentation")
+    if args.verbose:
+      print("generating HTML files ...")
+    framadoc_generate_html_files()
+    print("\nDocumentation generated successfully.")
+  else:
+    print("no arguments given !")
 
-framadoc_generate_all()
+framadoc_generate()
