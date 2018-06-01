@@ -1,3 +1,6 @@
 # HTML files
 frama-doc/*.html
 frama-doc/modules/*.html
+frama-doc/build
+frama-doc/dist
+frama-doc/framadoc.spec
